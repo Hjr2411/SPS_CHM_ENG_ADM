@@ -1,9 +1,3 @@
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-
-<script>
 // ===============================
 // FIREBASE CONFIG
 // ===============================
@@ -18,27 +12,42 @@ const firebaseConfig = {
   measurementId: "G-C5D3774P2G"
 };
 
-// Inicializa Firebase
+// ===============================
+// INIT FIREBASE
+// ===============================
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
 const db = firebase.database();
-//const baseRef = db.ref("registros"); // ajuste se necessário
-const baseRef = db.ref("/");
+
+// ⚠️ AJUSTE IMPORTANTE:
+// NÃO use "/" para excluir – isso inclui backup e config
+const baseRef = db.ref("registros");
 
 // ===============================
 // VARIÁVEIS
 // ===============================
 let dados = {};
-let cacheOriginal = {};
 
 // ===============================
 // CARREGAR BASE
 // ===============================
 baseRef.once("value").then(snapshot => {
-  dados = snapshot.val() || {};
-  cacheOriginal = JSON.parse(JSON.stringify(dados));
-  log(`Base carregada: ${Object.keys(dados).length} registros`);
+  const raw = snapshot.val();
+
+  if (!raw) {
+    log("❌ Nenhum dado retornado do Firebase");
+    return;
+  }
+
+  dados = raw;
+
+  log(`✅ Registros carregados: ${Object.keys(dados).length}`);
+
+  // DEBUG REAL
+  Object.values(dados).slice(0, 5).forEach(item => {
+    log(`DATA ENCONTRADA: ${item.data}`);
+  });
 });
 
 // ===============================
@@ -53,15 +62,21 @@ function simular() {
     return;
   }
 
+  if (fim < inicio) {
+    alert("Data final menor que a inicial");
+    return;
+  }
+
   let count = 0;
 
   Object.values(dados).forEach(item => {
+    if (!item.data) return;
     if (item.data >= inicio && item.data <= fim) {
       count++;
     }
   });
 
-  log(`SIMULAÇÃO`);
+  log(`🧪 SIMULAÇÃO`);
   log(`Registros que seriam excluídos: ${count}`);
 }
 
@@ -77,43 +92,56 @@ function excluirPorData() {
     return;
   }
 
+  if (fim < inicio) {
+    alert("Data final menor que a inicial");
+    return;
+  }
+
   if (!confirm(`Confirma exclusão de ${inicio} até ${fim}?`)) return;
 
   const updates = {};
   let removidos = 0;
 
   Object.entries(dados).forEach(([key, item]) => {
+    if (!item.data) return;
+
     if (item.data >= inicio && item.data <= fim) {
-      updates[key] = null; // DELETE no Firebase
+      updates[key] = null;
       removidos++;
     }
   });
 
-  db.ref("backup_exclusoes/" + Date.now()).set(dados); // backup completo
+  if (removidos === 0) {
+    log("⚠️ Nenhum registro encontrado para exclusão");
+    return;
+  }
+
+  // BACKUP ANTES DE EXCLUIR
+  db.ref("backup_exclusoes/" + Date.now()).set(dados);
 
   baseRef.update(updates).then(() => {
-    log(`EXCLUSÃO EXECUTADA`);
+    log(`🔥 EXCLUSÃO CONCLUÍDA`);
     log(`Registros removidos: ${removidos}`);
     location.reload();
   });
 }
 
 // ===============================
-// EXCLUSÃO EM MASSA
+// EXCLUSÃO TOTAL
 // ===============================
 function excluirTudo() {
   if (!confirm("⚠️ CONFIRMA EXCLUSÃO TOTAL DA BASE?")) return;
 
-  db.ref("backup_exclusoes/" + Date.now()).set(dados); // backup total
+  db.ref("backup_exclusoes/" + Date.now()).set(dados);
 
   baseRef.remove().then(() => {
-    log(`🔥 BASE TOTALMENTE APAGADA`);
+    log("🔥 BASE COMPLETAMENTE EXCLUÍDA");
     location.reload();
   });
 }
 
 // ===============================
-// BAIXAR JSON ATUAL
+// DOWNLOAD JSON
 // ===============================
 function baixarJSON() {
   const blob = new Blob(
@@ -121,14 +149,12 @@ function baixarJSON() {
     { type: "application/json" }
   );
 
-  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = "backup_sps_ch.json";
   a.click();
-  URL.revokeObjectURL(url);
 
-  log("Backup JSON baixado");
+  log("📦 Backup baixado");
 }
 
 // ===============================
@@ -138,4 +164,3 @@ function log(msg) {
   const logEl = document.getElementById("log");
   logEl.textContent += msg + "\n";
 }
-</script>
