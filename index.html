@@ -2,39 +2,51 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>SPS_CH – Limpeza de Base</title>
+  <title>SPS_CH – Exclusão por Data</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-  <h1>SPS_CH – Exclusão Controlada</h1>
 
+  <h1>SPS_CH – Limpeza Controlada</h1>
+
+  <!-- BLOCO PERÍODO -->
   <div class="box">
     <h2>Excluir por período</h2>
 
-    <label>Data inicial</label>
-    <input type="date" id="dataInicio">
+    <label for="dataInicio">Data inicial</label>
+    <input type="date" id="dataInicio" onclick="this.showPicker()">
 
-    <label>Data final</label>
-    <input type="date" id="dataFim">
+    <label for="dataFim">Data final</label>
+    <input type="date" id="dataFim" onclick="this.showPicker()">
 
-    <button onclick="simular()">Simular exclusão</button>
-    <button onclick="excluirPorData()">Excluir</button>
+    <div class="actions">
+      <button onclick="simular()">Simular exclusão</button>
+      <button onclick="excluirPorData()">Excluir período</button>
+    </div>
   </div>
 
+  <!-- BLOCO MASSA -->
   <div class="box danger">
     <h2>Exclusão em massa</h2>
     <button onclick="excluirTudo()">Excluir TODA a base</button>
   </div>
 
+  <!-- BLOCO EXPORT -->
   <div class="box">
-    <button onclick="baixarJSON()">Baixar JSON limpo</button>
+    <h2>Backup</h2>
+    <button onclick="baixarJSON()">Baixar JSON atual</button>
   </div>
 
+  <!-- LOG -->
   <pre id="log"></pre>
+
 </div>
 
+<!-- SCRIPT -->
+<!-- O JS COM FIREBASE QUE VOCÊ JÁ TEM -->
 <script src="script.js"></script>
+
 </body>
 </html>
