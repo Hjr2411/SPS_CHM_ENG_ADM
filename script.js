@@ -23,7 +23,8 @@ firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
 const db = firebase.database();
-const baseRef = db.ref("registros"); // ajuste se necessário
+//const baseRef = db.ref("registros"); // ajuste se necessário
+const baseRef = db.ref("/");
 
 // ===============================
 // VARIÁVEIS
